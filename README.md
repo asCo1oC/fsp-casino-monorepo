@@ -1,5 +1,7 @@
 # FSP Casino — единая платформа мини-игр
 
+**Репозиторий:** [github.com/asCo1oC/fsp-casino-monorepo](https://github.com/asCo1oC/fsp-casino-monorepo)
+
 Монорепозиторий: **Java Spring Boot** (общий бэкенд, кошелёк, JWT), встроенный **Opencase** (React), вложенные сборки **Mountain** и **Bank**, опционально **Python**-сервис для Opencase (`kazik-game`) при локальной разработке без Java.
 
 ## Структура
