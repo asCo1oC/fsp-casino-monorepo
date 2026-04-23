@@ -1065,6 +1065,14 @@ button, input, select {
 }
 .external-game-shell__header {
   padding: 6px 6px 12px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.external-game-shell__header .btn {
+  align-self: center;
 }
 .external-game-shell__header h2 {
   font-size: 1.3rem;

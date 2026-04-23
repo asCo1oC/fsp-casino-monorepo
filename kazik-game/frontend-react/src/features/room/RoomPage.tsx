@@ -28,6 +28,7 @@ const DEFAULT_WIN_INDEX = 30
 const DEFAULT_STRIP_SIZE = 80
 const RARITY_PALETTE = ['#b0c3d9', '#5e98d9', '#4b69ff', '#8847ff', '#d32ce6', '#eb4b4b', '#ffd700']
 const RARITY_LABELS = ['Tier 1', 'Tier 2', 'Tier 3', 'Tier 4', 'Tier 5', 'Tier 6', 'Tier 7']
+const INITIAL_WAIT_SECONDS = Number(import.meta.env.VITE_DEFAULT_WAITING_SECONDS ?? 60)
 
 function rarityFromSeed(seedText: string, index: number) {
   const seed = [...seedText].reduce((acc, char) => acc + char.charCodeAt(0), 0) + index
@@ -69,7 +70,7 @@ export function RoomPage({ roomId, userId, onExit, toast, onOpenInstruction }: P
   const api = useMemo(() => new ApiClient(), [])
   const [room, setRoom] = useState<RoomDetail | null>(null)
   const [participants, setParticipants] = useState<RoomParticipant[]>([])
-  const [timer, setTimer] = useState<number>(15)
+  const [timer, setTimer] = useState<number>(INITIAL_WAIT_SECONDS)
   const [winner, setWinner] = useState<Winner | null>(null)
   const [winnerVisible, setWinnerVisible] = useState(false)
   const [isSpinning, setIsSpinning] = useState(false)

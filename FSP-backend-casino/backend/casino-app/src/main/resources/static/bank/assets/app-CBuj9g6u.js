@@ -2,7 +2,7 @@ const COLORS = ["#ffcf42", "#5dd6ff", "#ff7a7a", "#c69bff", "#8dff8d", "#ffab4f"
 const SAFE_CENTER = { x: 50, y: 50 };
 const SAFE_RECT = { left: 28, right: 72, top: 8, bottom: 92 };
 const GOLD_BAR_RECT = { left: 42, right: 58, top: 43, bottom: 57 };
-const WAIT_DURATION_SEC = 10;
+const WAIT_DURATION_SEC = 60;
 const APPROACH_DURATION_MS = 5000;
 const API_BASE = window.location.origin;
 
@@ -46,6 +46,8 @@ const el = {
   cfgWarning: document.getElementById("cfgWarning"),
   saveConfigBtn: document.getElementById("saveConfigBtn"),
   
+  openBankAdminBtn: document.getElementById("openBankAdminBtn"),
+  openServerAdminBtn: document.getElementById("openServerAdminBtn"),
   openProfileBtn: document.getElementById("openProfileBtn"),
   backFromProfileBtn: document.getElementById("backFromProfileBtn"),
   viewProfile: document.getElementById("view-profile"),
@@ -166,6 +168,50 @@ function setStoredJwt(token) {
   if (token) window.localStorage.setItem("casino_jwt", token);
 }
 
+function roleFromStoredJwt() {
+  try {
+    const t = getStoredJwt();
+    if (!t) return null;
+    const parts = t.split(".");
+    if (parts.length < 2) return null;
+    const b64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    const pad = b64.length % 4 ? "=".repeat(4 - (b64.length % 4)) : "";
+    const payload = JSON.parse(atob(b64 + pad));
+    return payload.role || null;
+  } catch {
+    return null;
+  }
+}
+
+function showBankAdminView() {
+  if (!el.viewSelection || !el.viewRoom) return;
+  el.viewSelection.style.display = "none";
+  el.viewRoom.style.display = "none";
+  if (el.viewProfile) el.viewProfile.style.display = "none";
+  if (el.viewAdmin) {
+    el.viewAdmin.style.display = "block";
+    updateAdminAnalysis();
+  }
+  try {
+    const adminPath = new URL("admin", window.location.href).pathname;
+    window.history.pushState({}, "", adminPath);
+  } catch {
+    window.history.pushState({}, "", "/bank/admin");
+  }
+}
+
+function openServerAdminFromIframe() {
+  try {
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({ type: "OPEN_SERVER_ADMIN" }, window.location.origin);
+    } else {
+      window.location.assign("/admin");
+    }
+  } catch {
+    window.location.assign("/admin");
+  }
+}
+
 async function apiRequest(path, options = {}) {
   const headers = {
     "Content-Type": "application/json",
@@ -203,6 +249,9 @@ async function refreshWallet() {
   state.user.balance = Number(wallet.balance || 0);
   state.user.reserved = Number(wallet.reservedBalance || 0);
   renderUser();
+  if (el.openServerAdminBtn) {
+    el.openServerAdminBtn.style.display = roleFromStoredJwt() === "ADMIN" ? "inline-block" : "none";
+  }
 }
 
 async function spendBalance(amount) {
@@ -1414,10 +1463,25 @@ function bindEvents() {
 
   if (el.backFromAdminBtn) {
     el.backFromAdminBtn.addEventListener("click", () => {
-      window.history.pushState({}, '', '/');
+      try {
+        const homePath = new URL(".", window.location.href).pathname;
+        window.history.pushState({}, "", homePath);
+      } catch {
+        window.history.pushState({}, "", "/bank/");
+      }
       if (el.viewAdmin) el.viewAdmin.style.display = "none";
       el.viewSelection.style.display = "block";
     });
+  }
+
+  if (el.openBankAdminBtn) {
+    el.openBankAdminBtn.addEventListener("click", () => {
+      if (state.inRoom || state.roundRunning) return;
+      showBankAdminView();
+    });
+  }
+  if (el.openServerAdminBtn) {
+    el.openServerAdminBtn.addEventListener("click", () => openServerAdminFromIframe());
   }
 
   const cfgInputs = [el.cfgSeats, el.cfgEntryFee, el.cfgPrizePercent, el.cfgBoostEnabled, el.cfgBoostPrice];

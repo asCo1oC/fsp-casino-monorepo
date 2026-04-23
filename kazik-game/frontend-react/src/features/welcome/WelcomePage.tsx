@@ -5,11 +5,20 @@ type GameId = 'opencase' | 'mountain' | 'bank'
 type WelcomePageProps = {
   onSelectGame: (game: GameId) => void
   onOpenProfile: () => void
+  onOpenAdmin?: () => void
+  showAdminEntry?: boolean
   bonusBalance: number
   userId: number | null
 }
 
-export function WelcomePage({ onSelectGame, onOpenProfile, bonusBalance, userId }: WelcomePageProps) {
+export function WelcomePage({
+  onSelectGame,
+  onOpenProfile,
+  onOpenAdmin,
+  showAdminEntry,
+  bonusBalance,
+  userId,
+}: WelcomePageProps) {
   return (
     <div className="welcome-layout">
       <div className="welcome-top-actions">
@@ -20,6 +29,11 @@ export function WelcomePage({ onSelectGame, onOpenProfile, bonusBalance, userId 
         <button className="btn btn-secondary" onClick={onOpenProfile}>
           Профиль
         </button>
+        {showAdminEntry && onOpenAdmin && (
+          <button type="button" className="btn btn-secondary" onClick={onOpenAdmin}>
+            Админ-панель
+          </button>
+        )}
       </div>
       <div className="welcome-content shell-card">
         <StolotoLogo className="welcome-logo mx-auto mb-4" />

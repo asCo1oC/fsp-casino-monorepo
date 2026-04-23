@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 60 * 24 * 7  # 7 days
 
     # Room defaults
-    default_wait_seconds: int = 15
+    default_wait_seconds: int = 60
     # Должен совпадать с длительностью анимации рулетки на фронте (сек.)
     opencase_animation_seconds: float = 6.5
     default_max_players: int = 4

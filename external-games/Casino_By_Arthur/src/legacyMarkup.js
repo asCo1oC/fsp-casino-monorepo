@@ -5,10 +5,14 @@ export const legacyMarkup = `
       <div>
         <h1>Casino FSP MVP</h1>
       </div>
-      <button id="openProfileBtn" class="profile-btn">
-        <div class="profile-avatar-small"></div>
-        <span id="headerUserName">VIP_Player_1</span>
-      </button>
+      <div class="header-top-actions" style="display:flex;flex-wrap:wrap;gap:0.5rem;align-items:center;justify-content:flex-end;">
+        <button type="button" id="openBankAdminBtn" class="secondary">Админ комнаты</button>
+        <button type="button" id="openServerAdminBtn" class="secondary" style="display:none;">Платформа</button>
+        <button id="openProfileBtn" class="profile-btn">
+          <div class="profile-avatar-small"></div>
+          <span id="headerUserName">VIP_Player_1</span>
+        </button>
+      </div>
     </div>
   </header>
 

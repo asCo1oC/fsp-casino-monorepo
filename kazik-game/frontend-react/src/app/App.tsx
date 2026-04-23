@@ -27,8 +27,13 @@ export function App() {
   const [roomId, setRoomId] = useState<number | null>(null)
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [toast, setToast] = useState<{ message: string; type: string } | null>(null)
-  const [showWelcome, setShowWelcome] = useState<boolean>(!hasSeenWelcomeThisLoad)
+  const [showWelcome, setShowWelcome] = useState<boolean>(() => {
+    const p = window.location.pathname
+    if (p.startsWith('/admin') || p.startsWith('/profile')) return false
+    return !hasSeenWelcomeThisLoad
+  })
   const [userId, setUserId] = useState<number | null>(null)
+  const [userRole, setUserRole] = useState<string | null>(null)
   const [instructionOpen, setInstructionOpen] = useState(false)
   const isRoomActive = view === 'room' && roomId !== null
 
@@ -47,13 +52,6 @@ export function App() {
     }
   }
 
-  const handleOpenProfileFromWelcome = () => {
-    hasSeenWelcomeThisLoad = true
-    setShowWelcome(false)
-    setGameMode('opencase')
-    navigateTo('/profile', 'profile', true)
-  }
-
   useEffect(() => {
     let cancelled = false
     const bootstrap = async () => {
@@ -66,6 +64,7 @@ export function App() {
           const session = await api.login(username, password)
           if (cancelled) return
           setUserId(session.userId)
+          setUserRole(session.role ?? null)
           const [active, userProfile] = await Promise.all([
             api.getActiveRoom(session.userId),
             api.getUserProfile(session.userId),
@@ -118,6 +117,39 @@ export function App() {
     setView(nextView)
   }
 
+  const handleOpenProfileFromWelcome = () => {
+    hasSeenWelcomeThisLoad = true
+    setShowWelcome(false)
+    setGameMode('opencase')
+    navigateTo('/profile', 'profile', true)
+  }
+
+  const handleOpenAdminFromWelcome = () => {
+    hasSeenWelcomeThisLoad = true
+    setShowWelcome(false)
+    setGameMode('opencase')
+    navigateTo('/admin', 'admin', true)
+  }
+
+  const openPlatformAdmin = () => {
+    setGameMode('opencase')
+    navigateTo('/admin', 'admin', true)
+  }
+
+  useEffect(() => {
+    const onMsg = (e: MessageEvent) => {
+      if (e.origin !== window.location.origin) return
+      if (e.data?.type !== 'OPEN_SERVER_ADMIN') return
+      setGameMode('opencase')
+      if (window.location.pathname !== '/admin') {
+        window.history.pushState({}, '', '/admin')
+      }
+      setView('admin')
+    }
+    window.addEventListener('message', onMsg)
+    return () => window.removeEventListener('message', onMsg)
+  }, [])
+
   // Removed synchronous setState effect that was triggering cascading renders
 
   const showToast = (message: string, type = 'info') => {
@@ -130,6 +162,8 @@ export function App() {
       <WelcomePage
         onSelectGame={handleSelectGame}
         onOpenProfile={handleOpenProfileFromWelcome}
+        onOpenAdmin={handleOpenAdminFromWelcome}
+        showAdminEntry={userRole === 'ADMIN'}
         bonusBalance={profile?.bonus_balance ?? 0}
         userId={userId}
       />
@@ -156,6 +190,11 @@ export function App() {
               </button>
             )}
             <button className="btn btn-secondary" onClick={() => setShowWelcome(true)}>Игры</button>
+            {userRole === 'ADMIN' && (
+              <button type="button" className="btn btn-secondary" onClick={() => openPlatformAdmin()}>
+                Админ-панель
+              </button>
+            )}
           </div>
         </header>
       )}
@@ -202,8 +241,15 @@ export function App() {
         {gameMode === 'mountain' && (
           <section className="external-game-shell shell-card">
             <div className="external-game-shell__header">
-              <h2>Mountain-hiking-minigame</h2>
-              <p>Модуль подключен в единую Stoloto-платформу.</p>
+              <div>
+                <h2>Mountain-hiking-minigame</h2>
+                <p>Модуль подключен в единую Stoloto-платформу.</p>
+              </div>
+              {userRole === 'ADMIN' && (
+                <button type="button" className="btn btn-secondary" onClick={() => openPlatformAdmin()}>
+                  Админ-панель платформы
+                </button>
+              )}
             </div>
             <iframe title="Mountain-hiking-minigame" src={mountainUrl} className="external-game-frame" />
           </section>
@@ -212,8 +258,15 @@ export function App() {
         {gameMode === 'bank' && (
           <section className="external-game-shell shell-card">
             <div className="external-game-shell__header">
-              <h2>Bank-minigame</h2>
-              <p>Модуль подключен в единую Stoloto-платформу.</p>
+              <div>
+                <h2>Bank-minigame</h2>
+                <p>Модуль подключен в единую Stoloto-платформу.</p>
+              </div>
+              {userRole === 'ADMIN' && (
+                <button type="button" className="btn btn-secondary" onClick={() => openPlatformAdmin()}>
+                  Админ-панель платформы
+                </button>
+              )}
             </div>
             <iframe title="Bank-minigame" src={bankUrl} className="external-game-frame" />
           </section>

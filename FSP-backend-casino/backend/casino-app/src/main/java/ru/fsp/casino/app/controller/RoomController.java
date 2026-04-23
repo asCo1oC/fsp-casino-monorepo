@@ -105,7 +105,7 @@ public class RoomController {
         User user = userRepository.findById(userId).orElseThrow();
 
         var config = adminConfigRepository.findById(1).orElse(null);
-        int waitingSeconds = config != null ? config.getWaitingTimerSeconds() : 15;
+        int waitingSeconds = config != null ? config.getWaitingTimerSeconds() : 60;
 
         VipTier tier = request.tier() != null
             ? VipTier.valueOf(request.tier().toUpperCase())
@@ -162,7 +162,7 @@ public class RoomController {
         if (existingParticipant != null) {
             if (room.getTimerStartedAt() == null) {
                 var config = adminConfigRepository.findById(1).orElse(null);
-                int waitingSeconds = config != null ? config.getWaitingTimerSeconds() : 15;
+                int waitingSeconds = config != null ? config.getWaitingTimerSeconds() : 60;
                 balanceService.reserve(userId, room.getEntryFee());
                 room.setTimerStartedAt(Instant.now());
                 roomRepository.save(room);
@@ -197,7 +197,7 @@ public class RoomController {
 
         if (room.getTimerStartedAt() == null) {
             var config = adminConfigRepository.findById(1).orElse(null);
-            int waitingSeconds = config != null ? config.getWaitingTimerSeconds() : 15;
+            int waitingSeconds = config != null ? config.getWaitingTimerSeconds() : 60;
             room.setTimerStartedAt(Instant.now());
             roomRepository.save(room);
             redisTemplate.opsForValue().set(

@@ -294,7 +294,15 @@ export class ApiClient {
   }
 
   async login(username: string, password: string) {
-    const response = await this.request<{ token: string; userId: number }>('/api/auth/login', {
+    const response = await this.request<{
+      token: string
+      userId: number
+      username?: string
+      role?: string
+      vipTier?: string
+      balance?: number
+      reservedBalance?: number
+    }>('/api/auth/login', {
       method: 'POST',
       payload: { username, password },
     })

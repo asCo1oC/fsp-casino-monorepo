@@ -39,7 +39,7 @@ public class RoundScheduler {
     private final org.springframework.data.redis.core.StringRedisTemplate redisTemplate;
     private final RoomCacheService roomCache;
 
-    @Value("${app.game.waitingTimerSeconds:15}")
+    @Value("${app.game.waitingTimerSeconds:60}")
     private int waitingTimerSeconds;
 
     @Scheduled(fixedDelayString = "${app.game.schedulerIntervalMs:5000}")

@@ -2,17 +2,29 @@
 
 **Репозиторий:** [github.com/asCo1oC/fsp-casino-monorepo](https://github.com/asCo1oC/fsp-casino-monorepo)
 
-Монорепозиторий: **Java Spring Boot** (общий бэкенд, кошелёк, JWT), встроенный **Opencase** (React), вложенные сборки **Mountain** и **Bank**, опционально **Python**-сервис для Opencase (`kazik-game`) при локальной разработке без Java.
+## Зачем этот проект
 
-## Структура
+Одна точка входа для нескольких мини-игр на **общем бонусном балансе** (баллы на счёте пользователя): регистрация и вход через JWT, резерв баллов при входе в комнату, прозрачный жизненный цикл раунда и серверный выбор победителя. Платформа заточена под сценарий «лобби → комната → ожидание → раунд → выплата», с админ-настройками комнат и глобального конфига.
+
+**Три игры в одном приложении (после сборки в Java `static/`):**
+
+| Игра | Суть | Где в UI |
+|------|------|----------|
+| **Opencase** | Комнаты с входом, слотами, таймером ожидания (по умолчанию **60 с**), бустом шанса и визуальной рулеткой; исход и таймеры согласованы с бэкендом и WebSocket | `/` |
+| **Mountain** | Горный заезд по раундам: ставки в диапазоне комнаты, бусты, события на треке; клиентский геймплей с опорой на тот же кошелёк и авторизацию | `/mountain/` |
+| **Bank** | «Взлом сейфа»: подбор комнаты, буст, таймер ожидания перед стартом, визуализация раунда | `/bank/` |
+
+Бэкенд один — **Spring Boot**: кошелёк, комнаты Opencase, STOMP-топики, админ-API. Статические SPA (Opencase + Mountain + Bank) отдаются из `casino-app` вместе с API на порту **8080**.
+
+## Структура монорепозитория
 
 | Каталог | Назначение |
 |--------|-------------|
-| [`FSP-backend-casino/`](FSP-backend-casino/README.md) | Maven multi-module: API, WebSocket, Docker Compose, статика в `casino-app/src/main/resources/static/` |
-| [`kazik-game/`](kazik-game/RUNNING.md) | Opencase: Python API + React SPA (сборка может подкладываться в Java `static/`) |
-| [`external-games/`](external-games/) | Исходники **Mountain** и **Bank** (Vite); после `npm run build` — копировать в `static/mountain` и `static/bank` |
+| [`FSP-backend-casino/`](FSP-backend-casino/README.md) | Maven multi-module: домен, игровая логика, Spring Boot-приложение, Flyway, Docker Compose, встроенная статика |
+| [`kazik-game/frontend-react/`](kazik-game/frontend-react/README.md) | Исходники **Opencase** (React + Vite); прод-сборка копируется в `static/` бэкенда |
+| [`external-games/`](external-games/README.md) | Исходники **Mountain** и **Bank** (Vite); после `npm run build` — отдельно в `static/mountain/` и `static/bank/` |
 
-## Быстрый старт (только Docker, рекомендуется)
+## Быстрый старт (Docker)
 
 ```bash
 cd FSP-backend-casino/backend
@@ -22,32 +34,28 @@ cp .env.example .env
 docker compose up --build
 ```
 
-- Приложение: http://localhost:8080  
-- Opencase SPA: `/`  
-- Mountain: `/mountain/`  
-- Bank: `/bank/`  
-- Swagger: `/swagger-ui`  
+| URL | Назначение |
+|-----|------------|
+| http://localhost:8080 | Единое приложение: Opencase, профиль `/profile`, админка `/admin`, вложенные игры |
+| http://localhost:8080/mountain/ | Mountain |
+| http://localhost:8080/bank/ | Bank |
+| http://localhost:8080/swagger-ui | OpenAPI |
 
-Подробности, тестовые пользователи и API: [**FSP-backend-casino/README.md**](FSP-backend-casino/README.md).
+Тестовые логины, описание API, WebSocket и Redis: [**FSP-backend-casino/README.md**](FSP-backend-casino/README.md).
 
 ## Обновление фронтендов в Java `static/`
 
-**Не** копируйте `rsync --delete` из корня `dist/` в `static/`, если в `static/` уже есть подпапки `mountain/`, `bank/`, `instruct_photos/` — они будут удалены.
+**Не** выполняйте `rsync --delete` из корня `dist/` Opencase в корень `static/`, если там уже лежат `mountain/`, `bank/`, `instruct_photos/` — подкаталоги будут удалены.
 
 Рекомендуемый порядок:
 
-1. **Opencase (корневой SPA):**  
-   `cd kazik-game/frontend-react && npm run build`  
-   затем скопируйте только **`dist/index.html`** и **`dist/assets/`** в `FSP-backend-casino/backend/casino-app/src/main/resources/static/`.
+1. **Opencase:** `cd kazik-game/frontend-react && npm run build` → скопировать только **`dist/index.html`** и **`dist/assets/`** в `FSP-backend-casino/backend/casino-app/src/main/resources/static/`.
+2. **Mountain / Bank:** `npm run build` в `external-games/...` → синхронизировать **только** в `static/mountain/` и `static/bank/`.
+3. Пересобрать образ: `docker compose build backend`.
 
-2. **Mountain / Bank:**  
-   `npm run build` в соответствующей папке `external-games/...`, затем синхронизация **только** в `static/mountain/` и `static/bank/`.
+## Локальная разработка Opencase (React)
 
-3. Пересоберите Docker-образ бэкенда: `docker compose build backend`.
-
-## Локальная разработка Opencase (React + Python)
-
-См. [**kazik-game/RUNNING.md**](kazik-game/RUNNING.md) и переменные `VITE_API_BASE_URL` / `VITE_API_PROXY_TARGET` в `kazik-game/frontend-react`.
+Сборка и переменные для dev-сервера Vite: [`kazik-game/frontend-react/README.md`](kazik-game/frontend-react/README.md). API и WebSocket в dev обычно проксируются на запущенный бэкенд (**http://localhost:8080**), см. `VITE_*` в `.env.example` пакета.
 
 ## Лицензия
 

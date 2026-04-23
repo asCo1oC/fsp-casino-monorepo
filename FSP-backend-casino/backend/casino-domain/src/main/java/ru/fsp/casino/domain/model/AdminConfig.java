@@ -43,7 +43,7 @@ public class AdminConfig {
 
     @Column(nullable = false)
     @Builder.Default
-    private Integer waitingTimerSeconds = 15;
+    private Integer waitingTimerSeconds = 60;
 
     @Builder.Default
     private Instant updatedAt = Instant.now();

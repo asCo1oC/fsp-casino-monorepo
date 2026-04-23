@@ -10,7 +10,7 @@ const BOT_NAMES = ['NorthFox', 'SnowMint', 'AeroPeak', 'IcySlot', 'RidgeOne', 'B
 const BOT_AVATARS = ['🥷', '🧗', '🏂', '🧢', '🤖', '🦊', '🐺'];
 const TRACK_HEIGHT = 300;
 const TOP_HEADROOM = 0.14;
-const WAITING_SECONDS = 16;
+const WAITING_SECONDS = 60;
 const FINISH_SECONDS = 8;
 const AVALANCHE_START_Y = -80;
 const AVALANCHE_END_Y = 460;
@@ -103,6 +103,33 @@ function getStoredJwt() {
 
 function setStoredJwt(token) {
   if (token) window.localStorage.setItem('casino_jwt', token);
+}
+
+function roleFromStoredJwt() {
+  try {
+    const t = getStoredJwt();
+    if (!t) return null;
+    const parts = t.split('.');
+    if (parts.length < 2) return null;
+    const b64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    const pad = b64.length % 4 ? '='.repeat(4 - (b64.length % 4)) : '';
+    const payload = JSON.parse(atob(b64 + pad));
+    return payload.role || null;
+  } catch {
+    return null;
+  }
+}
+
+function openServerAdminPlatform() {
+  try {
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({ type: 'OPEN_SERVER_ADMIN' }, window.location.origin);
+    } else {
+      window.location.assign('/admin');
+    }
+  } catch {
+    window.location.assign('/admin');
+  }
 }
 
 async function apiRequest(path, options = {}) {
@@ -461,6 +488,7 @@ function CreateRoomModal({ open, config, setConfig, onClose, onSubmit }) {
 export default function App() {
   const [balance, setBalance] = useState(0);
   const [walletReady, setWalletReady] = useState(false);
+  const [isServerAdmin, setIsServerAdmin] = useState(false);
   const [rooms, setRooms] = useState([
     roomTemplate(101, 'Горная комната Gold', 300, 4),
     roomTemplate(102, 'Горная комната Silver', 150, 5),
@@ -546,6 +574,7 @@ export default function App() {
     await ensureAuth();
     const wallet = await apiRequest('/api/wallet/me');
     setBalance(Number(wallet.balance || 0));
+    setIsServerAdmin(roleFromStoredJwt() === 'ADMIN');
     setWalletReady(true);
   }
 
@@ -1077,6 +1106,11 @@ export default function App() {
                 <button type="button" className="action secondary" onClick={() => setInstructionOpen(true)}>
                   Инструкция
                 </button>
+                {isServerAdmin && (
+                  <button type="button" className="action secondary" onClick={openServerAdminPlatform}>
+                    Админ платформы
+                  </button>
+                )}
               </div>
             </header>
             <LobbyView
@@ -1110,6 +1144,11 @@ export default function App() {
                 <button type="button" className="action secondary" onClick={() => setInstructionOpen(true)}>
                   Инструкция
                 </button>
+                {isServerAdmin && (
+                  <button type="button" className="action secondary" onClick={openServerAdminPlatform}>
+                    Админ платформы
+                  </button>
+                )}
               </div>
             </header>
 

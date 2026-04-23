@@ -19,7 +19,7 @@ Backend раздает статические файлы именно из `fron
 npm run build
 ```
 
-После этого приложение доступно через FastAPI по `http://localhost:8000/`.
+После копирования сборки в `casino-app/.../static/` приложение отдаётся Spring Boot на **http://localhost:8080/** (тот же процесс, что и REST API).
 
 ## Важный контракт с backend
 
