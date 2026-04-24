@@ -2,7 +2,7 @@
 
 **Репозиторий:** [github.com/asCo1oC/fsp-casino-monorepo](https://github.com/asCo1oC/fsp-casino-monorepo)
 
-**Запущен на: [link](http://77.222.46.118:8080)
+**Запущен на:** [link](http://77.222.46.118:8080)
 
 ## Зачем этот проект
 
